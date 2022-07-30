@@ -1,0 +1,172 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\begin{document}
+\onehalfspacing
+\begin{titlepage}
+	\clearpage\thispagestyle{empty}
+	\centering
+	\vspace{1cm}
+		
+	\rule{\linewidth}{1mm} \\[0.5cm]
+	{ \Large \bfseries ISyE 6740 - Summer 2022\\[0.2cm]
+		Final Report}\\[0.5cm]
+	\rule{\linewidth}{1mm} \\[1cm]
+	
+		\begin{tabular}{l p{5cm}}
+		\textbf{Team Member Names:} Matthew Rand, Changhong Guan &   \\[10pt]
+		\textbf{Project Title:} Optimizing Initial Launch of eVTOL Operations &  \\[10pt]
+		\end{tabular} 
+	
+	\tableofcontents
+	
+\end{titlepage}
+
+\section{Problem Statement}
+		
+Urban air mobility is a fast-emerging field that is poised to revolutionize the transportation industry. Multiple companies across the world contend to bring access to a network of eVTOL aircraft that will allow for intra-city travel for the price of an Uber. While the initial economics limit the market and feasibility of the product, as the industry grows, the price point will continue to drop and expand access to broader markets across the country and across the globe.
+
+When considering the phased growth of an industry, it becomes necessary to determine the right market dynamics to target for initial operations that properly balances growth potential with a high probability of user adoption. The United States is the perfect incubator for such an industry, with the largest cities in America experiencing high-growth in geographically constrained regions. However, not all cities developed equally. Not only do population densities vary city to city, but access to public transportation, traffic congestion, and wealth disparities change market dynamics.
+
+A nascent industry must pick and choose its launch markets very carefully. As such, this problem is well-suited for an optimization algorithm that can determine the ideal set of launch parameters and determine which locations boast the best opportunity for success.
+
+\section{Data Source}
+
+\subsection{US Commute Flow Data}
+This data set is provided by the United States Census Bureau. The data is relevant as of 2015. This data set is used to find which major metropolitan cities has the most and possibly the worst commute situation, that makes it ideal candidate for exploring eVTOL aircraft network implementation to elevate commute nightmare. After descending sort on commute count, Los Angeles County (Los Angeles), Cook county (Chicago) and Harris County (Houston), rank top 3 the most commute counties. And we picked Los Angeles County or greater Los Angeles area for further exploration.
+
+\subsection{Locations of Available US Heliports and Airports}
+This dataset is provided by the Federal Aviation Administration and includes the latitude and longitude of all airports and heliports in the United States. Here we define vertiports as heliports and airports combined. We are assuming that to save on capital expenditure, initial operations will focus on retrofitting current aviation locals in lieu of developing brand new ones.
+
+\subsection{Neighborhood Geospatial Data of Greater Los Angeles}
+By using geopandas, geospatial data allows us to accurately map the Greater Los Angeles region and represent the physical location of different neighborhood centers given their boundary, centroids and area. It also provides population density for each neighborhood, from which we extrapolated potential commute need for each neighborhood as well.
+
+\section{Methodology}
+\subsection{Clustering}
+\subsubsection{Preprocessing: Geopandas}
+Geopandas library is used to work with geospatial data, in our case, in geojson format. After calculating centroid of each neighbohood, we plot Los Angeles area we are interested in, in Figure \ref{fig:proj01}, with red dots representing neighborhood centers and dark yellow dots representing currently available vertiports.
+
+
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{proj01.png}
+\caption{Los Angeles Neighborhood Centroids and Boundaries, Overlay with Available Vertiports }
+\label{fig:proj01}
+\end{figure}
+
+\subsubsection{ISOMAP and Kmeans}
+First construct weighted neighbor graph, given by matrix $D\in R^{m\times m}$, and
+\[
+D_{ij} = ||x_i - x_j||_d \qquad d \text{ is geographical distance between pair of centroids}
+\]
+
+Then, apply ISOMAP transformation on neighborhood centroids to take account for geographical distance. In order to determine optimal number of clusters for great Los Angeles area, we used Kmeans algorithm, and plot sum of squared distance vs. number of clusters, K, when K goes from 1 to 20. From Figure \ref{fig:proj02}, elbow point seems to happen between $K=5$ and $K=10$.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{proj02.png}
+\caption{Find Optimal Number of Clusters}
+\label{fig:proj02}
+\end{figure}
+
+Here we tried a few clustering configurations for $K=5$, $K=7$ and $K=10$, as shown in Figure \ref{fig:proj03}. Although the more clusters there are the less sum of squared distance, we believe 10 clusters is good enough to represent both urban and suburban areas. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{proj03.png}
+\caption{Different clustering results on ISOMAP of Centroids }
+\label{fig:proj03}
+\end{figure}
+
+Once we established $K=10$ clusters, assign each neighborhood with its cluster label, and compute geographical cluster centers as shown in Figure \ref{fig:proj04}. Since mapping is color coded by population percentile, there are more cluster centers in most populated area, which makes sense for commuting needs.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{proj04.png}
+\caption{10 Cluster Centroids on LA Area, with Population Percentile Overlay }
+\label{fig:proj04}
+\end{figure}
+
+\subsubsection{Optimization}
+
+Assumption
+
+Data
+\[
+\begin{split}
+K& \qquad \text{Number of clusters we choose}\\
+c_{ij}&  \qquad \text{Number of daily commuters between cluster $i$ and cluster $j$} \\
+p_i& \qquad \text{Percentage of commuter in cluster $i$ would choose eVTOL}\\
+d_{ij}&  \qquad \text{geographical distance between cluster $i$ and cluster $j$} \\
+P & \qquad \text{Net profit per passenger per mile} \\
+V^{exist}_i & \qquad \text{Number of existing vertiport that cluster $i$ have} \\
+V^{new}_i & \qquad \text{Number of new vertiport that cluster $i$ should have} \\
+Cap^{eVTOL} & \qquad \text{Capacity of one eVTOL, how many commuters can one eVTOL hold} \\
+Cap^{port} & \qquad \text{Capacity of one vertiport, how many eVTOL can one vertiport hold} \\
+Cost^{eVTOL} & \qquad \text{how much does one eVTOL cost, depreciation life 10 years} \\
+Cost^{Ve} & \qquad \text{how much does using/renting one existing vertiport cost, annually} \\
+Cost^{Vn} & \qquad \text{how much does building one new vertiport cost, depreciation life 20 years} \\
+N^{Ve}_i & \qquad \text{number of existing vertiport in cluster $i$} \\
+N^{Vn}_i & \qquad \text{number of new vertiport in cluster $i$} \\
+\end{split}
+\]
+
+Variable
+\[
+x_{i}  \qquad \text{Number of eVTOL that cluster $i$ should maintain} \\
+\]
+
+
+Objective function is 
+\[
+\textbf{max} \biggl( \sum_{i=1}^K \sum_{j=1}^K c_{ij}p_i d_{ij}P - \sum_{i=1}^K\Bigl( \frac{1}{10\times365}Cost^{eVTOL}x_i + \frac{1}{365}Cost^{Ve}N^{Ve}_i + \frac{1}{20\times365}Cost^{Vn}N^{Vn}_i  \Bigl)\biggl)
+\]
+
+Subject to
+\[
+\begin{split}
+x_i  \geq 0 &\qquad \text{number of eVTOL that each vertiport have cannot be zero}\\
+Cap^{eVTOL}x_i \geq \sum_{j=1}^K c_{ij}p_i &\qquad \text{total eVTOL capacity of cluster $i$ can satisfy all eVTOL commute needs} \\
+Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity of cluster $i$ can hold all eVTOL in cluster $i$} \\
+\end{split}
+\]
+
+\begin{table}[h!]
+\centering
+\caption{Table for constant parameters}
+\begin{tabular}{|c c c|} 
+ \hline
+ Constant & Value & Description \\ [0.5ex] 
+ \hline\hline
+ $K$ & 10 & Number of clusters we choose \\
+ $P$ & \$0.5 & Net profit per passenger per mile \\ 
+ $Cap^{eVTOL}$ & 4 & Capacity of one eVTOL\\
+ $Cap^{port}$ & 8 & Capacity of one vertiport\\
+ $Cost^{eVTOL}$ & \$100,000 & One eVTOL cost, depreciation life is 10 years\\
+ $Cost^{Ve}$ & \$12,000 & Annual renting cost of one existing vertiport (Cap 8 eVTOL) \\
+ $Cost^{Vn}$ & \$200,000 & Building cost of one new vertiport (Cap 8 eVTOL) \\ [1ex] 
+ \hline
+\end{tabular}
+\label{table:proj02}
+\end{table}
+
+
+\section{Evaluation}
+
+
+\section{Final Results}
+
+\pagebreak
+
+\begin{appendix}
+  \listoffigures
+  \listoftables
+\end{appendix}
+
+\end{document}
+
