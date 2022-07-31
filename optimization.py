@@ -20,7 +20,7 @@ n_eVTOL_Vars = LpVariable.dicts('n_eVTOL', clusterName, 0, cat='Integer')
 # number of new vertiport
 n_Vn_Vars = LpVariable.dicts('n_Vn', clusterName, 0, cat='Integer')
 
-n_round = 5
+n_round = 3
 c_eVTOL = 100000.0
 c_Ve = 12000.0
 c_Vn = 200000.0

@@ -54,7 +54,8 @@ Geopandas library is used to work with geospatial data, in our case, in geojson 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{proj01.png}
+\includegraphics[width=0.8\textwidth]{proj01.png}
+\vspace*{-10mm}
 \caption{Los Angeles Neighborhood Centroids and Boundaries, Overlay with Available Vertiports }
 \label{fig:proj01}
 \end{figure}
@@ -69,7 +70,8 @@ Then, apply ISOMAP transformation on neighborhood centroids to take account for 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{proj02.png}
+\includegraphics[width=0.8\textwidth]{proj02.png}
+\vspace*{-10mm}
 \caption{Find Optimal Number of Clusters}
 \label{fig:proj02}
 \end{figure}
@@ -78,7 +80,8 @@ Here we tried a few clustering configurations for $K=5$, $K=7$ and $K=10$, as sh
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{proj03.png}
+\includegraphics[width=0.9\textwidth]{proj03.png}
+\vspace*{-10mm}
 \caption{Different clustering results on ISOMAP of Centroids }
 \label{fig:proj03}
 \end{figure}
@@ -87,7 +90,8 @@ Once we established $K=10$ clusters, assign each neighborhood with its cluster l
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{proj04.png}
+\includegraphics[width=0.8\textwidth]{proj04.png}
+\vspace*{-45mm}
 \caption{10 Cluster Centroids on LA Area, with Population Percentile Overlay }
 \label{fig:proj04}
 \end{figure}
@@ -95,13 +99,21 @@ Once we established $K=10$ clusters, assign each neighborhood with its cluster l
 \subsubsection{Optimization}
 
 Assumption
+\begin{enumerate}
+  \item Commuters in each clusters have equal probability travel to other clusters
+  \item Commuters have fixed percentage of total population
+  \item Operation profit per passenger per mile is roughly estimated without large scale data
+  \item All existing vertiports are available to use or rent
+  \item Both existing and new vertiports have same eVTOL capacity
+  \item During commute time, each eVTOL can make 3 round trips without charging
+\end{enumerate}
 
 Data
 \[
 \begin{split}
 K& \qquad \text{Number of clusters we choose}\\
 c_{ij}&  \qquad \text{Number of daily commuters between cluster $i$ and cluster $j$} \\
-p_i& \qquad \text{Percentage of commuter in cluster $i$ would choose eVTOL}\\
+p_{ij}& \qquad \text{Percentage of commuter in cluster $i$ would choose eVTOL}\\
 d_{ij}&  \qquad \text{geographical distance between cluster $i$ and cluster $j$} \\
 P & \qquad \text{Net profit per passenger per mile} \\
 V^{exist}_i & \qquad \text{Number of existing vertiport that cluster $i$ have} \\
@@ -113,6 +125,7 @@ Cost^{Ve} & \qquad \text{how much does using/renting one existing vertiport cost
 Cost^{Vn} & \qquad \text{how much does building one new vertiport cost, depreciation life 20 years} \\
 N^{Ve}_i & \qquad \text{number of existing vertiport in cluster $i$} \\
 N^{Vn}_i & \qquad \text{number of new vertiport in cluster $i$} \\
+N^{r} & \qquad \text{number of round trips one eVTOL can make during commute hours}
 \end{split}
 \]
 
@@ -124,14 +137,14 @@ x_{i}  \qquad \text{Number of eVTOL that cluster $i$ should maintain} \\
 
 Objective function is 
 \[
-\textbf{max} \biggl( \sum_{i=1}^K \sum_{j=1}^K c_{ij}p_i d_{ij}P - \sum_{i=1}^K\Bigl( \frac{1}{10\times365}Cost^{eVTOL}x_i + \frac{1}{365}Cost^{Ve}N^{Ve}_i + \frac{1}{20\times365}Cost^{Vn}N^{Vn}_i  \Bigl)\biggl)
+\textbf{max} \biggl( \sum_{i=1}^K \sum_{j=1}^K c_{ij}p_{ij} d_{ij}P - \sum_{i=1}^K\Bigl( \frac{1}{10\times365}Cost^{eVTOL}x_i + \frac{1}{365}Cost^{Ve}N^{Ve}_i + \frac{1}{20\times365}Cost^{Vn}N^{Vn}_i  \Bigl)\biggl)
 \]
 
 Subject to
 \[
 \begin{split}
 x_i  \geq 0 &\qquad \text{number of eVTOL that each vertiport have cannot be zero}\\
-Cap^{eVTOL}x_i \geq \sum_{j=1}^K c_{ij}p_i &\qquad \text{total eVTOL capacity of cluster $i$ can satisfy all eVTOL commute needs} \\
+Cap^{eVTOL}N^{r}x_i \geq \sum_{j=1}^K c_{ij}p_{ij} &\qquad \text{total eVTOL capacity of cluster $i$ can satisfy all eVTOL commute needs} \\
 Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity of cluster $i$ can hold all eVTOL in cluster $i$} \\
 \end{split}
 \]
@@ -139,27 +152,64 @@ Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity o
 \begin{table}[h!]
 \centering
 \caption{Table for constant parameters}
-\begin{tabular}{|c c c|} 
+\begin{tabular}{|c c l|} 
  \hline
  Constant & Value & Description \\ [0.5ex] 
  \hline\hline
  $K$ & 10 & Number of clusters we choose \\
+ $p_{ij}$ & $5\%\times 2.5\%$ & total commute is 5\% of population, eVTOL commute is 2.5\% of total commute \\
+ $N^r$ & 3 & Number of round trip one eVTOL can make during commute hours\\
  $P$ & \$0.5 & Net profit per passenger per mile \\ 
  $Cap^{eVTOL}$ & 4 & Capacity of one eVTOL\\
  $Cap^{port}$ & 8 & Capacity of one vertiport\\
  $Cost^{eVTOL}$ & \$100,000 & One eVTOL cost, depreciation life is 10 years\\
  $Cost^{Ve}$ & \$12,000 & Annual renting cost of one existing vertiport (Cap 8 eVTOL) \\
- $Cost^{Vn}$ & \$200,000 & Building cost of one new vertiport (Cap 8 eVTOL) \\ [1ex] 
+ $Cost^{Vn}$ & \$200,000 & Building cost of one new vertiport (Cap 8 eVTOL), depreciation life is 20 years \\ [1ex] 
+ \hline
+\end{tabular}
+\label{table:proj01}
+\end{table}
+
+Future refinement:
+\begin{enumerate}
+  \item Commuters in each clusters have dynamic probability travel to other clusters
+  \item Commuters' percentage of total population is related to other factors, like wealth, race, age, etc.
+  \item Further explore availability of existing vertiports
+\end{enumerate}
+
+User python package Pulp to solve optimization problem.
+
+\section{Final Results}
+
+\begin{table}[h!]
+\centering
+\caption{Optimization Results}
+\begin{tabular}{|c c c c c c|} 
+ \hline
+cluster\_label& existing\_vertiport&	total\_commute&	total\_prof&	new\_vertiport&	eVTOL\_number \\ [0.5ex] 
+ \hline\hline
+0&	22	& 2,398& 23,418	& 3	& 200 \\
+1&	4&	1,948&	26,239&	17&	163\\
+2&	18&	2,994&	36,338&	14&	250\\
+3&	3&	1,210&	26,221&	10&	101\\
+4&	14&	2,301&	25,531&	10&	192\\
+5&	12&	2,317&	23,761&	13&	194\\
+6&	19&	1,516&	23,336&	0&	127\\
+7&	5&	1,469&	29,907&	11&	123\\
+8&	13&	2,925&	33,054&	18&	244\\
+9&	49&	2,224&	20,626&	0&	186\\ [1ex] 
  \hline
 \end{tabular}
 \label{table:proj02}
 \end{table}
 
+Total daily profit is \$211,806.34
+
 
 \section{Evaluation}
 
 
-\section{Final Results}
+
 
 \pagebreak
 
