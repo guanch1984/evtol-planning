@@ -21,7 +21,7 @@ n_eVTOL_Vars = LpVariable.dicts('n_eVTOL', clusterName, 0, cat='Integer')
 n_Vn_Vars = LpVariable.dicts('n_Vn', clusterName, 0, cat='Integer')
 
 n_round = 3
-c_eVTOL = 100000.0
+c_eVTOL = 1000000.0 ## updated to 1 million
 c_Ve = 12000.0
 c_Vn = 200000.0
 cap_eVTOL = 4.0
