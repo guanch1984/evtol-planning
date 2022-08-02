@@ -8,7 +8,6 @@
 \begin{document}
 \onehalfspacing
 \begin{titlepage}
-	
 	\clearpage\thispagestyle{empty}
 	\centering
 	\vspace{1cm}
@@ -150,11 +149,11 @@ Industry surveys have shown typical configurations and expense models which can 
 Assumptions
 \begin{enumerate}
   \item Commuters in each clusters have equal probability travel to other clusters
-  \item Commuters have fixed percentage of total population
   \item Operation profit per passenger per mile is roughly estimated without large scale data
   \item All existing vertiports are available to use or rent
   \item Both existing and new vertiports have same eVTOL capacity
-  \item During commute time, each eVTOL can make 3 round trips without charging
+  \item eVTOL's can make a total of 15 flights per day
+  \item Initial operations will have an initial capital investment of \$1 Billion
 \end{enumerate}
 
 Data
@@ -174,27 +173,32 @@ Cost^{Ve} & \qquad \text{how much does using/renting one existing vertiport cost
 Cost^{Vn} & \qquad \text{how much does building one new vertiport cost, depreciation life 20 years} \\
 N^{Ve}_i & \qquad \text{number of existing vertiport in cluster $i$} \\
 N^{Vn}_i & \qquad \text{number of new vertiport in cluster $i$} \\
-N^{r} & \qquad \text{number of round trips one eVTOL can make during commute hours}
+N^{r} & \qquad \text{number of round trips one eVTOL can make during commute hours} \\
+B_{cap} & \qquad \text{Total Capital investment budget}
 \end{split}
 \]
 
 Variable
 \[
-x_{i}  \qquad \text{Number of eVTOL that cluster $i$ should maintain} \\
+\begin{split}
+x_{i}  & \qquad \text{Number of eVTOL that cluster $i$ should maintain}\\
+\%_{util,i} & \qquad \text{Percent of population utilizing vertiport}\\
+\end{split}
 \]
 
 
 Objective function is 
 \[
-\textbf{max} \biggl( \sum_{i=1}^K \sum_{j=1}^K c_{ij}p_{ij} d_{ij}P - \sum_{i=1}^K\Bigl( \frac{1}{10\times365}Cost^{eVTOL}x_i + \frac{1}{365}Cost^{Ve}N^{Ve}_i + \frac{1}{20\times365}Cost^{Vn}N^{Vn}_i  \Bigl)\biggl)
+\textbf{max} \biggl( \sum_{i=1}^K \sum_{j=1}^K c_{ij}p_{ij} d_{ij}P*\%_{util,i}- \sum_{i=1}^K\Bigl( \frac{1}{10\times365}Cost^{eVTOL}x_i + \frac{1}{365}Cost^{Ve}N^{Ve}_i + \frac{1}{20\times365}Cost^{Vn}N^{Vn}_i  \Bigl)\biggl)
 \]
 
 Subject to
 \[
 \begin{split}
 x_i  \geq 0 &\qquad \text{number of eVTOL that each vertiport have cannot be zero}\\
-Cap^{eVTOL}N^{r}x_i \geq \sum_{j=1}^K c_{ij}p_{ij} &\qquad \text{total eVTOL capacity of cluster $i$ can satisfy all eVTOL commute needs} \\
+Cap^{eVTOL}N^{r}x_i \geq \sum_{j=1}^K c_{ij}p_{ij}*\%_{util,i} &\qquad \text{total eVTOL capacity of cluster $i$ can satisfy eVTOL commute} \\
 Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity of cluster $i$ can hold all eVTOL in cluster $i$} \\
+Cost^{Ve}N^{Ve}_i + Cost^{eVTOL}x_i + Cost^{Vn}N^{Vn}_i \leq B_{cap} &\qquad  \text{Cost of vertiports and aircraft cannot exceed capital budget}\\
 \end{split}
 \]
 
@@ -206,14 +210,14 @@ Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity o
  Constant & Value & Description \\ [0.5ex] 
  \hline\hline
  $K$ & 10 & Number of clusters we choose \\
- $p_{ij}$ & $5\%\times 2.5\%$ & total commute is 5\% of population, eVTOL commute is 2.5\% of total commute \\
  $N^r$ & 15 & Number of round trips one eVTOL can make per day\\
  $P$ & \$0.5 & Net profit per passenger per mile \\ 
  $Cap^{eVTOL}$ & 4 & Capacity of one eVTOL\\
  $Cap^{port}$ & 8 & Capacity of one vertiport\\
  $Cost^{eVTOL}$ & \$1,000,000 & One eVTOL cost, depreciation life is 10 years\\
  $Cost^{Ve}$ & \$200,000 & Annual renting cost of one existing vertiport (Cap 8 eVTOL) \\
- $Cost^{Vn}$ & \$500,000 & Cost of converting airport to vertiport (Cap 8 eVTOL), depreciation life is 20 years \\ [1ex] 
+ $Cost^{Vn}$ & \$500,000 & Cost of converting airport to vertiport (Cap 8 eVTOL), depreciation life is 20 years \\ 
+ $B_{cap}$ & \$1,000,000,000 & Total capital investment available\\[1ex] 
  \hline
 \end{tabular}
 \label{table:proj01}
@@ -223,37 +227,56 @@ Cap^{port}(N^{Ve}_i+N^{Vn}_i) \geq x_i &\qquad  \text{total vertiport capacity o
 
 \begin{table}[h!]
 \centering
-\caption{Optimization Results}
+\caption{Optimization Results by cluster size}
 \begin{tabular}{|c c c c c c|} 
  \hline
-Cluster Label& Vertiport Location&	Total Commuters&	Total Profit per Day&		Flights per Day \\ [0.5ex] 
+Cluster Label& Percent Utilization & Total Profit & Number of Daily Flights & Number of eVTOLS \\ [0.5ex] 
  \hline\hline
-0&	22	& 2,398& \$23,418	&  600 \\
-1&	4&	1,948&	\$26,239&		489\\
-2&	18&	2,994&	\$36,338&		750\\
-3&	3&	1,210&	\$26,221&		303\\
-4&	14&	2,301&	\$25,531&		576\\
-5&	12&	2,317&	\$23,761&		582\\
-6&	19&	1,516&	\$23,336&		381\\
-7&	5&	1,469&	\$29,907&		369\\
-8&	13&	2,925&	\$33,054&		732\\
-9&	49&	2,224&	\$20,626&		558\\ [1ex] 
+	5	& 0.0 & \$0	&  0 & 0 \\
+	6&	0.0328&	\$59,620&		14295 & 953\\
+	7&	0.0365&	\$49,505&		14295 & 953\\
+	8&	0.0943&	\$114,905&		31111, 2074\\
+	9&	0.1371&	\$198,766&		42917 & 2861\\
+	10&	0.1550&	\$390,096&		42932 & 2862\\ [1ex] 
  \hline
 \end{tabular}
 \label{table:proj02}
 \end{table}
 
-As you can see from the results above, developing a robust, profitable model for the eVTOL industry is not a trivial problem. The total daily profit for one company operating within the parameters outlined above equates to \$34,184.42, while only factoring in capital expenses, not wages or other costs. While this does equate to a yearly profitability of \$12.8M, this expects consistent demand and utilization of the network and ignores many potentials costs associated with operating a business, such as insurance, maintenance, etc.
 
-This model also assumes perfect utilization, which is not a realistic expectation for a company, but does showcase a maximum expected profitability target for new entrants.
+As you can see from the results above, developing a robust, profitable model for the eVTOL industry is not a trivial problem. The total daily profit for one company operating within the parameters outlined above equates to \$390,096, while only factoring in capital expenses, not wages or other costs. 
 
-The most shocking result from this analysis is the number of eVTOL aircraft required to execute operations. To service all of LA, 536 aircraft will need to be produced and operationalized. While this number is likely to be attainable by a mature production operation, it expects a very large capital investment (roughly \$500M in production costs alone) to be made to develop a fleet long before revenue-generating operations commence. While certain eVTOL companies have valuations as high as \$4 Billion dollars and others, such as Wisk Aero, have received investments of over \$450M, it does assume an extremely mature production process, and likely a long ramp towards profitability.
+This model also ignores the very real constraint of physical land access. The model does not control for the physical positioning of the additional vertiports in the region.
+
+The most shocking result from this analysis is the asymmetric utilization of the vertiports. Given that the clustering analysis optimizes to balance the total population equally between the clusters, the utilization is not evenly distributed.
+
+\begin{table}[h!]
+\centering
+\caption{Demand for k=10}
+\begin{tabular}{|c c c c|} 
+ \hline
+Cluster Label& New Vertiport Capacity& Number of eVTOL's Needed& Percent Utilization  \\ [0.5ex] 
+ \hline\hline
+0&0 & 0 & 0\\ 
+1&0 & 0 & 0\\
+2&0 & 0 & 0\\
+3&93 & 952 & 0.0590\\
+4&0 & 0 & 0\\
+5&0 & 0 & 0\\
+6&77 & 957 & 0.0473\\
+7&91 & 953 & 0.0486\\
+8&0 & 0 & 0\\
+9&0 & 0 & 0\\[1ex] 
+ \hline
+\end{tabular}
+\label{table:proj02}
+\end{table}
 
 \section{Evaluation}
 
 Determining the utilization and profitability of an eVTOL market is extremely complex and relies on a number of competing priorities for utilization of capital investments. Our analysis utilized optimal operations locations based on a combination of ISOMAP and KMeans algorithms to develop a network to model typical operations. Then, an optimization routine took known capital expenditures, design limitations, cost models, and more to determine the expected profitability of the operations.
 
-This model took a few liberties in the analysis that reduced the accuracy to real-world dynamics a company might expect, but does show a potential business model and builds a baseline for future operators to understand their business needs and metrics targets to achieve profitability. For example, this model assumed that consumer utilization was a constant value, which is not truly representative of consumer sentiment and access to the technology. Initially, some small percentage of the population will be willing to utilize the platform for their commuting needs. As consumers gain acceptance of the technology, and as the cost per passenger-mile decreases, new markets open and and demand changes. Assuming that high net-worth individuals and those willing to utilize the technology were independently and identically distributed around LA is not entirely accurate. Those individuals would tend to be clustered in certain regions, and thus a more accurate model would weigh the population clusters by the wealth of the region to determine an initial model that would have better projected usage, especially during initial operations.
+This model took a few liberties in the analysis that reduced the accuracy to real-world dynamics a company might expect, but does show a potential business model and builds a baseline for future operators to understand their business needs and metrics targets to achieve profitability. For example, this model assumed that consumer utilization was an independent factor, which is not truly representative of consumer sentiment and access to the technology. Initially, some small percentage of the population will be willing to utilize the platform for their commuting needs. As consumers gain acceptance of the technology, and as the cost per passenger-mile decreases, new markets open and and demand changes. Assuming that high net-worth individuals and those willing to utilize the technology were independently and identically distributed around LA is not entirely accurate. Those individuals would tend to be clustered in certain regions, and thus a more accurate model would weigh the population clusters by the wealth of the region to determine an initial model that would have better projected usage, especially during initial operations.
 
 Additionally, as previously mentioned, average commute times were not factored into the model. One might expect that there is a direct relation between commute time and willingness to utilize eVTOL aircraft, as consumers would have to rationalize paying for the service by the expected benefit of the reduced travel time. This factor could be leveraged, along with demographic data such as wealth, in determining more accurate vertiport locations and utilization metrics.
 
@@ -266,7 +289,7 @@ For future considerations, there are a number of improvements that could be inco
 
 Additionally, other demographic factors, such as wealth, age, race, etc. should be incorporated to better model utilization of the service. Certain demographics will be more likely to utilize eVTOL aircraft, and that demand should be captured to better understand where to place vertiport locations.
 
-Lastly, future work should incorporate second-order effects, i.e. how increased demand for eVTOL changes traffic patterns and affects the cost-benefit equation for the individual consumer. Reduced congestion leads to shorter commutes, which might drive other customers back onto the roads into an equilibrium. This effect will have to be captured to accurately determine the total addressable market.
+Lastly, future work should incorporate second-order effects, i.e. how increased demand for eVTOL changes traffic patterns and affects the cost-benefit equation for the individual consumer. Reduced congestion leads to shorter commutes, which might drive other customers back onto the roads into an equilibrium. This effect will have to be captured to accurately determine the total addressable market. 
 
 \pagebreak
 
