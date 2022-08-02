@@ -144,6 +144,8 @@ Once we established $K=10$ clusters, assign each neighborhood with its cluster l
 
 Once the ISOMAP and K-Means algorithms helped us to establish our vertiport locations, we needed to understand what the expected profitability of the operation would be. To do so, we utilized our optimized cluster centers and built a routine that would determine the optimal volume of operations, given expected capital expenditure constraints and expected design choices. 
 
+Although we determined that K=10 is the optimal number of clusters, the graph showed that K=5-10 were all viable. Because of that, the optimization routine was run for K=5 though K=10 to determine how cluster size impacted profitability.
+
 Industry surveys have shown typical configurations and expense models which can be viewed in Table 1 below. Additional assumptions in building the optimization problem are detailed below. Python package PuLP was utilized to develop the optimization routine.
 
 Assumptions
@@ -249,6 +251,8 @@ As you can see from the results above, developing a robust, profitable model for
 This model also ignores the very real constraint of physical land access. The model does not control for the physical positioning of the additional vertiports in the region.
 
 The most shocking result from this analysis is the asymmetric utilization of the vertiports. Given that the clustering analysis optimizes to balance the total population equally between the clusters, the utilization is not evenly distributed.
+
+However, this result is not all that shocking. The algoirthm tended to favor increasing operational volume between the furthest cluster pairs in the network. Without an accurate way to account for demand, this is the natural result of the algorithm.
 
 \begin{table}[h!]
 \centering
